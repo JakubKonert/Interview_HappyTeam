@@ -1,22 +1,29 @@
 ﻿using AutoMapper;
+using Interview_HappyTeam_Backend.Core.Builders.OrderBuilder;
+using Interview_HappyTeam_Backend.Core.CalcMath;
 using Interview_HappyTeam_Backend.Core.Context;
-using Interview_HappyTeam_Backend.Core.DataTransferObject.Client;
+using Interview_HappyTeam_Backend.Core.Core;
 using Interview_HappyTeam_Backend.Core.DataTransferObject.Order;
 using Interview_HappyTeam_Backend.Core.Entities;
 using Interview_HappyTeam_Backend.Core.Enums;
+using Interview_HappyTeam_Backend.Core.ErrorLogger;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 
 namespace Interview_HappyTeam_Backend.Controllers
 {
+    [Route("api/[controller]")]
     public class OrderController : Controller
     {
         private AppDbContext _context { get; set; }
         private IMapper _mapper { get; }
+        private Lazy<OrderBuilder> _builder = new Lazy<OrderBuilder>(() => OrderBuilder.Instance);
         public OrderController(AppDbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
+            Setter.Set(context);
         }
 
         [HttpPost]
@@ -25,58 +32,32 @@ namespace Interview_HappyTeam_Backend.Controllers
         {
             try
             {
+                Order newOrder =  _builder.Value.StartBuilding()
+                    .WithLocationStart(order.LocationStart)
+                    .WithLocationEnd(order.LocationEnd)
+                    .WithCar(order.Car)
+                    .WithCountry(order.Country)
+                    .WithStartDate(order.StartDate)
+                    .WithEndtDate(order.EndDate)
+                    .Build();
 
-                if (order.StartDate > order.EndDate)
-                {
-                    return BadRequest($"Start date cannot be later than end date");
-                }
+                newOrder.TotalPrice = CalcMath.CalcTotalPrice(newOrder.Car, newOrder.StartDate, newOrder.EndDate);
 
-                Order newOrder = _mapper.Map<Order>(order);
-
-                Client? client = _context.Clients.Find(order.ClientId);
-                Location? locationStart = _context.Locations.Find(order.LocationIdStart);
-                Location? locationEnd = _context.Locations.Find(order.LocationIdEnd);
-                Car? car = _context.Cars.Find(order.CarId);
-
-                if (client == null)
-                {
-                    return BadRequest($"Client with provided id = {order.ClientId} does not exist!");
-                }
-                else if (locationStart == null) 
-                {
-                    return BadRequest($"Location start with provided id = {order.LocationIdStart} does not exist!");
-                }
-                else if (locationEnd == null) 
-                {
-                    return BadRequest($"Location end with provided id = {order.LocationIdEnd} does not exist!");
-                }
-                else if (car == null)
-                {
-                    return BadRequest($"Car with provided id = {order.CarId} does not exist!");
-                }
-
-                int days = (order.EndDate - newOrder.StartDate).Days;
-                double calculatedPrice = days > 1 ? days * car.CarModel.Price : car.CarModel.Price;
-
-                newOrder.Client = client;
-                newOrder.LocationStart = locationStart;
-                newOrder.LocationEnd = locationEnd;
-                newOrder.Car = car;
-                newOrder.TotalPrice = calculatedPrice;
-                
                 await _context.Orders.AddAsync(newOrder);
                 await _context.SaveChangesAsync();
                 return Ok(newOrder);
             }
             catch (Exception ex)
             {
+                Console.Write(ex.ToString());
+                ErrorLogger.LogError("OrderController -> CreateOrder", ex.Message);
                 return StatusCode(500);
             }
         }
 
         [HttpGet]
         [Route("ReadAll")]
-        public async Task<ActionResult<IEnumerable<ClientReadDTO>>> ReadAllOrders()
+        public async Task<ActionResult<IEnumerable<OrderReadDTO>>> ReadAllOrders()
         {
             try
             {
@@ -87,6 +68,7 @@ namespace Interview_HappyTeam_Backend.Controllers
             }
             catch (Exception ex)
             {
+                ErrorLogger.LogError("OrderController -> ReadAllOrders", ex.Message);
                 return StatusCode(500);
             }
         }
@@ -106,15 +88,16 @@ namespace Interview_HappyTeam_Backend.Controllers
 
                 return BadRequest($"Order with that id = {id} does not exist!");
             }
-            catch
+            catch (Exception ex)
             {
+                ErrorLogger.LogError("OrderController -> ReadOrderById", ex.Message);
                 return StatusCode(500);
             }
         }
 
         [HttpGet]
         [Route("ReadByStatus")]
-        public async Task<ActionResult<IEnumerable<ClientReadDTO>>> ReadAllOrdersByStatus(OrderStatus status)
+        public async Task<ActionResult<IEnumerable<OrderReadDTO>>> ReadAllOrdersByStatus(OrderStatus status)
         {
             try
             {
@@ -129,6 +112,7 @@ namespace Interview_HappyTeam_Backend.Controllers
             }
             catch (Exception ex)
             {
+                ErrorLogger.LogError("OrderController -> ReadAllOrdersByStatus", ex.Message);
                 return StatusCode(500);
             }
         }
@@ -151,6 +135,7 @@ namespace Interview_HappyTeam_Backend.Controllers
 
             catch (Exception ex)
             {
+                ErrorLogger.LogError("OrderController -> DeleteOrderById", ex.Message);
                 return StatusCode(500);
             }
         }

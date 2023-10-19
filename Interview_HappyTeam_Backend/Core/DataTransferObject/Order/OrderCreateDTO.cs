@@ -2,11 +2,11 @@
 {
     public class OrderCreateDTO
     {
-        public Guid ClientId { get; set; }
-        public Guid LocationIdStart { get; set; }
-        public Guid LocationIdEnd { get; set; }
-        public Guid CarId { get; set; }
+        public string Car { get; set; }
+        public string LocationStart { get; set; }
+        public string LocationEnd { get; set; }     
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public string Country { get; set; }
     }
 }

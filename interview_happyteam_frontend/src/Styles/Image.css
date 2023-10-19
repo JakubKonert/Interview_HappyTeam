@@ -1,0 +1,10 @@
+.carousel {
+    max-height: 80%; 
+  }
+
+  .carousel .carousel-item .d-block {
+    width: auto; /* Ustaw szerokość na "auto", aby zachować proporcje obrazu */
+    height: 70%; /* Ustaw wysokość na 70% dostępnej przestrzeni wysokości */
+    object-fit: cover; /* Skaluj zdjęcia, aby wypełnić całą przestrzeń, bez ucinania zawartości */
+    max-width: 100%; /* Ustaw maksymalną szerokość na 100% */
+  }

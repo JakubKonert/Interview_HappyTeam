@@ -1,0 +1,34 @@
+{
+    "CarConfig":{
+        "Cars":[
+            {
+                "Id":0,
+                "Model":"Model 3",
+                "PricePerDay": 50,
+                "Amount":10,
+                "IsAvailable":true
+            },
+            {
+                "Id":1,
+                "Model":"Model S",
+                "PricePerDay": 40,
+                "Amount":15,
+                "IsAvailable":true
+            },
+            {
+                "Id":2,
+                "Model":"Model X",
+                "PricePerDay": 60,
+                "Amount":7,
+                "IsAvailable":true
+            },
+            {
+                "Id":3,
+                "Model":"Model Y",
+                "PricePerDay": 70,
+                "Amount":3,
+                "IsAvailable":true
+            }
+        ]
+    }
+}
